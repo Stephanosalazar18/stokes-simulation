@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teorema de Stokes — Visualizador</title>
+  <style>
+    :root {
+      --bg-panel: rgba(20, 20, 30, 0.85);
+      --text: #e0e0e0;
+      --accent: #4caf50;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a12;
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+    }
+    #app { display: block; width: 100vw; height: 100vh; }
+    #mode-switcher {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    #mode-switcher button {
+      background: var(--bg-panel);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s;
+    }
+    #mode-switcher button:hover { background: rgba(60,60,80,0.9); }
+    #mode-switcher button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="app"></canvas>
+  <nav id="mode-switcher" role="radiogroup" aria-label="Selector de modo">
+    <button role="radio" aria-checked="true" data-mode="1" class="active">1 Flujo 2D</button>
+    <button role="radio" aria-checked="false" data-mode="2">2 Gradientes 3D</button>
+    <button role="radio" aria-checked="false" data-mode="3">3 Deformación</button>
+  </nav>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
