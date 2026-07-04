@@ -5,9 +5,11 @@ export interface ModeState {
   mathMode: boolean;
 }
 
-const initial: ModeState = { activeMode: 1, mathMode: false };
-
 export class ModeStore extends Store<ModeState> {
+  constructor() {
+    super({ activeMode: 1, mathMode: false });
+  }
+
   setMode(m: 1 | 2 | 3): void {
     if (m === this.getState().activeMode) return;
     this.setState({ activeMode: m });

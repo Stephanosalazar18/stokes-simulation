@@ -1,6 +1,6 @@
 type Listener<T> = (state: T, prev: T) => void;
 
-export class Store<T extends Record<string, unknown>> {
+export class Store<T extends object> {
   private state: T;
   private listeners: Set<Listener<T>> = new Set();
 
