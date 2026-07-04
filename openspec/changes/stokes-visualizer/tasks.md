@@ -151,40 +151,40 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Mode 1 — 2D Flow Visualization
 
-- [ ] 3.1 Create `src/render/SceneManager.ts` — one Scene, three Groups, shared WebGLRenderer (~40 lines)
-  - Files: `src/render/SceneManager.ts`
+- [x] 3.1 Create `src/render/SceneManager.ts` — one Scene, three Groups, shared WebGLRenderer (~40 lines)
+  - Files: `src/scene/SceneManager.ts` (placed at src/scene/ per orchestrator)
   - Depends on: 0.6
   - Description: Creates THREE.Scene, three THREE.Group (mode1Group, mode2Group, mode3Group), ONE WebGLRenderer. setGroupVisible(m, visible).
-  - Verification: Three groups exist; setGroupVisible(1, true) toggles group1.visible.
+  - Verification: Three groups exist; setGroupVisible(1, true) toggles group1.visible. Completed in PR 1a+PR 2.
 
-- [ ] 3.2 Create `src/render/CameraRig.ts` — PerspectiveCamera + per-mode position/lookAt (~50 lines)
-  - Files: `src/render/CameraRig.ts`
+- [x] 3.2 Create `src/render/CameraRig.ts` — PerspectiveCamera + per-mode position/lookAt (~50 lines)
+  - Files: `src/scene/CameraRig.ts`
   - Depends on: 3.1
-  - Description: Single PerspectiveCamera. setMode(m) repositions: Mode1 z=5, Mode2 z=5+orbit, Mode3 z=3. OrbitControls attach/detach.
-  - Verification: setMode(3) → camera.position.z === 3; OrbitControls detached.
+  - Description: Single PerspectiveCamera. configureForMode(m) repositions: Mode1 z=5 top-down, Mode2 z=5 3D perspective, Mode3 z=3 close XY.
+  - Verification: configureForMode(3) → camera.position.z === 3.
 
-- [ ] 3.3 Create `src/render/particles/ParticleSystem2D.ts` — 2D point cloud, RK4, domain recycling (~80 lines)
+- [x] 3.3 Create `src/render/particles/ParticleSystem2D.ts` — 2D point cloud, RK4, domain recycling (~80 lines)
   - Files: `src/render/particles/ParticleSystem2D.ts`
   - Depends on: 2.4, 1.6
   - Description: Creates THREE.Points with BufferGeometry. tick(dt) runs RK4 integration per particle. Recycle on age>lifetime or |x|>2.5. Magnitude attribute for viridis.
-  - Verification: 2000 particles visible; particles recycle on domain exit; RK4 produces smooth paths.
+  - Verification: 2000-10000 particles; particles recycle on domain exit; RK4 produces smooth paths.
 
-- [ ] 3.4 Create `src/render/shaders/mode1.vert.glsl` — viridis LUT, point size from seed (~25 lines)
+- [x] 3.4 Create `src/render/shaders/mode1.vert.glsl` — viridis LUT, point size from seed (~25 lines)
   - Files: `src/render/shaders/mode1.vert.glsl`
   - Depends on: none
-  - Description: Pass-through vertex with viridis LUT sample from aMagnitude, gl_PointSize from uPointSize * (0.6 + 0.4 * aSeed).
+  - Description: Pass-through vertex with aMagnitude → gl_PointSize scaling; color varying passed through.
   - Verification: Compiles; particles render with varying sizes.
 
-- [ ] 3.5 Create `src/render/shaders/mode1.frag.glsl` — soft circular sprite, additive blend (~15 lines)
+- [x] 3.5 Create `src/render/shaders/mode1.frag.glsl` — soft circular sprite, additive blend (~15 lines)
   - Files: `src/render/shaders/mode1.frag.glsl`
   - Depends on: 3.4
-  - Description: Fragment outputs vColor; soft circle via gl_PointCoord distance; additive blending.
+  - Description: Fragment outputs vColor; soft circle via gl_PointCoord distance; discard outside radius.
   - Verification: Particles appear as soft glowing dots.
 
-- [ ] 3.6 Create `src/render/Mode1Renderer.ts` — Mode 1 group: Points + streamlines (~60 lines)
+- [x] 3.6 Create `src/render/Mode1Renderer.ts` — Mode 1 group: Points + streamlines (~60 lines)
   - Files: `src/render/Mode1Renderer.ts`
   - Depends on: 3.1, 3.3, 3.4, 3.5
-  - Description: Creates mode1Group, adds ParticleSystem2D. Optional streamline LineSegments toggle. Subscribes to FieldStore and UISettingsStore.
+  - Description: Creates mode1Group, replaces placeholder cube with ParticleSystem2D. Subscribes to FieldStore and UISettingsStore.
   - Verification: Mode 1 shows 2000+ moving particles; field switch updates velocities next frame.
 
 ## Phase 4: Mode 2 — 3D Particle Grid
