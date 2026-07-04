@@ -1,15 +1,28 @@
 import { ModeStore } from "./stores/ModeStore";
+import { FieldStore } from "./stores/FieldStore";
+import { UISettingsStore } from "./stores/UISettingsStore";
+import { InteractionStore } from "./stores/InteractionStore";
 import { SceneManager } from "./scene/SceneManager";
+import { fields2D } from "./fields/fields2D";
 
 export class App {
-  private modeStore: ModeStore;
+  readonly modeStore: ModeStore;
+  readonly fieldStore: FieldStore;
+  readonly uiStore: UISettingsStore;
+  readonly interactionStore: InteractionStore;
+
   private scene: SceneManager;
   private buttons: HTMLButtonElement[] = [];
   private rafId = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.modeStore = new ModeStore();
+    this.fieldStore = new FieldStore(fields2D);
+    this.uiStore = new UISettingsStore();
+    this.interactionStore = new InteractionStore();
+
     this.scene = new SceneManager(canvas);
+
     this.setupModeSwitcher();
     this.modeStore.subscribe(() => this.onModeChange());
   }
