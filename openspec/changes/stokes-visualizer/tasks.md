@@ -81,13 +81,13 @@ Chain strategy: stacked-to-main
   - Description: ModeState interface, setMode(m), toggleMathMode().
   - Verification: setMode(2) → getState().activeMode === 2.
 
-- [ ] 1.3 Create `src/stores/FieldStore.ts` — active field, params, sources, coefficients (~40 lines)
+- [x] 1.3 Create `src/stores/FieldStore.ts` — active field, params, sources, coefficients (~40 lines)
   - Files: `src/stores/FieldStore.ts`
   - Depends on: 1.1
   - Description: FieldState with catalog, activeIndex, sources, coeffs. Methods: setField, addSource, setCoeff, reset.
   - Verification: setField(1) updates activeIndex; coefficients clamp to [-10, 10].
 
-- [ ] 1.4 Create `src/stores/InteractionStore.ts` — mouse world pos, speed EMA, click, radius (~35 lines)
+- [x] 1.4 Create `src/stores/InteractionStore.ts` — mouse world pos, speed EMA, click, radius (~35 lines)
   - Files: `src/stores/InteractionStore.ts`
   - Depends on: 1.1
   - Description: InteractionState with mouseWorld, mouseSpeed, clickHeld, effectRadius, effectsEnabled, modifier.
@@ -99,13 +99,13 @@ Chain strategy: stacked-to-main
   - Description: DeformationState with vortices array, keyframeBuffer Float32Array, headIndex, bufferDirty.
   - Verification: spawnVortex adds to vortices; reset() zeroes buffer.
 
-- [ ] 1.6 Create `src/stores/UISettingsStore.ts` — particle density, color mode, image URL (~25 lines)
+- [x] 1.6 Create `src/stores/UISettingsStore.ts` — particle density, color mode, image URL (~25 lines)
   - Files: `src/stores/UISettingsStore.ts`
   - Depends on: 1.1
   - Description: UISettingsState with particleDensity, colorMode, showStreamlines, speedMultiplier, imageUrl.
   - Verification: set('particleDensity', 5) updates state.
 
-- [ ] 1.7 Create `src/ui/es.ts` — all Spanish strings as typed object (~60 lines)
+- [x] 1.7 Create `src/ui/es.ts` — all Spanish strings as typed object (~60 lines)
   - Files: `src/ui/es.ts`
   - Depends on: none (standalone)
   - Description: ES constant with mode names, field names, button labels, ARIA strings, error messages.
@@ -125,13 +125,13 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Fields and Math
 
-- [ ] 2.1 Create `src/fields/Field.ts` — Field interface (~15 lines)
+- [x] 2.1 Create `src/fields/Field.ts` — Field interface (~15 lines)
   - Files: `src/fields/Field.ts`
   - Depends on: none
   - Description: Interface with eval(x,y,z), curl(x,y,z), name, formulaLaTeX.
   - Verification: TypeScript compiles; interface is assignable.
 
-- [ ] 2.2 Create `src/fields/fields2D.ts` — 6 predefined 2D fields (~80 lines)
+- [x] 2.2 Create `src/fields/fields2D.ts` — 6 predefined 2D fields (~80 lines)
   - Files: `src/fields/fields2D.ts`
   - Depends on: 2.1
   - Description: vortexRotacional, expansionRadial, flujoCortante, puntoSilla, vortexConFuente, reticulaPeriodica. Each with eval, curl, name, formulaLaTeX.
@@ -329,7 +329,7 @@ Chain strategy: stacked-to-main
   - Description: Rolling 60-frame mean FPS. Frame start/end markers. Debug mode (?debug=1).
   - Verification: FPS counter shows ~60 on decent hardware; markers log to console.
 
-- [ ] 8.5 Create `src/utils/rng.ts` — seeded RNG (mulberry32) (~15 lines)
+- [x] 8.5 Create `src/utils/rng.ts` — seeded RNG (mulberry32) (~15 lines)
   - Files: `src/utils/rng.ts`
   - Depends on: none
   - Description: mulberry32 PRNG for reproducible particle spawns.
