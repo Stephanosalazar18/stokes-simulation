@@ -1,43 +1,44 @@
 # Stokes Theorem Visualizer
 
-Interactive browser-based visualization of Stokes' theorem for vector calculus students.
+Interactive browser-based visualization of Stokes' Theorem for vector calculus students.
 
 ## Tech Stack
 
 - **Vite** — fast dev server and build
-- **TypeScript** — strict mode
-- **Three.js** — WebGL 3D rendering
-- **GLSL** — custom vertex/fragment shaders
+- **Vanilla JavaScript (ES modules)** — no TypeScript, no framework
+- **WebGL** — GPU fluid simulation adapted from [PavelDoGreat/WebGL-Fluid-Simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation) (MIT)
+- **WebGL2** — half-float textures for Stam stable fluids
 
 ## Development
 
 ```bash
-npm install
-npm run dev       # Start dev server (http://localhost:5173)
-npm run build     # Production build to dist/
-npm run preview   # Preview production build
-npm run type-check  # TypeScript strict check
+pnpm install
+pnpm dev        # Start dev server (http://localhost:5173)
+pnpm build      # Production build to dist/
+pnpm preview    # Preview production build
 ```
 
 ## Modes
 
-1. **Flujo 2D** — 2D particle flow visualization with RK4 integration
-2. **Gradientes 3D** — 3D particle grid encoding field direction
-3. **Deformación** — Mesh deformation with reversible vortex effects
+1. **Contornos 2D** — 2D contour rendering *(próximamente)*
+2. **Gradientes 3D** — PavelDoGreat-style fluid simulation with live Stokes theorem overlay
+3. **Imagen** — Image-based vector field *(próximamente)*
+4. **Modo completo** — Combined visualization *(próximamente)*
 
 ## Project Structure
 
 ```
 src/
-├── main.ts              Entry point
-├── app.ts               App lifecycle and mode switching
-├── stores/              Reactive state management
-│   ├── Store.ts         Base observable class
-│   └── ModeStore.ts     Mode and math-mode state
-└── scene/               Three.js scene management
-    └── SceneManager.ts  Scene, camera, renderer, mode groups
+├── main.js        Entry point, mode manager
+├── FluidSim.js    GPU fluid core (MIT-attributed, PavelDoGreat adapted)
+├── theorem.js     Curve C, ∮F·dr, ∬(∇×F)·dS, ratio computation
+├── ui.js          Spanish UI: theorem panel, mode switcher, radius slider
+├── mode1.js       Mode 1: placeholder (próximamente)
+├── mode2.js       Mode 2: full gradients + theorem integration
+├── mode3.js       Mode 3: placeholder (próximamente)
+└── mode4.js       Mode 4: placeholder (próximamente)
 ```
 
 ## License
 
-MIT
+MIT — original PavelDoGreat/WebGL-Fluid-Simulation code used under MIT.
