@@ -1,5 +1,8 @@
 node_modules/
 dist/
+.atl/
+openspec/
+test-results/
 .DS_Store
 .env*
 *.log

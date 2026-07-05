@@ -1,44 +1,31 @@
-# Stokes Theorem Visualizer
+# Stokes Fluid Simulation
 
-Interactive browser-based visualization of Stokes' Theorem for vector calculus students.
+Eulerian 2D fluid simulation running on WebGL2. Based on the stable fluids method (Stam) with a Shadertoy reference implementation.
 
-## Tech Stack
+## Features
 
-- **Vite** — fast dev server and build
-- **Vanilla JavaScript (ES modules)** — no TypeScript, no framework
-- **WebGL** — GPU fluid simulation adapted from [PavelDoGreat/WebGL-Fluid-Simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation) (MIT)
-- **WebGL2** — half-float textures for Stam stable fluids
+- Semi-Lagrangian advection
+- Jacobi pressure solve (20 iterations)
+- Divergence-free velocity projection
+- Interactive mouse-driven vorticity injection
 
-## Development
+## Setup
 
 ```bash
 pnpm install
-pnpm dev        # Start dev server (http://localhost:5173)
-pnpm build      # Production build to dist/
-pnpm preview    # Preview production build
+pnpm dev
 ```
 
-## Modes
+## Architecture
 
-1. **Contornos 2D** — 2D contour rendering *(próximamente)*
-2. **Gradientes 3D** — PavelDoGreat-style fluid simulation with live Stokes theorem overlay
-3. **Imagen** — Image-based vector field *(próximamente)*
-4. **Modo completo** — Combined visualization *(próximamente)*
+Single-file implementation (`src/main.js`) using raw WebGL2 with ping-pong FBOs:
 
-## Project Structure
-
-```
-src/
-├── main.js        Entry point, mode manager
-├── FluidSim.js    GPU fluid core (MIT-attributed, PavelDoGreat adapted)
-├── theorem.js     Curve C, ∮F·dr, ∬(∇×F)·dS, ratio computation
-├── ui.js          Spanish UI: theorem panel, mode switcher, radius slider
-├── mode1.js       Mode 1: placeholder (próximamente)
-├── mode2.js       Mode 2: full gradients + theorem integration
-├── mode3.js       Mode 3: placeholder (próximamente)
-└── mode4.js       Mode 4: placeholder (próximamente)
-```
+- **Advection** — moves velocity field along itself
+- **Jacobi** — solves pressure Poisson equation
+- **Projection** — subtracts pressure gradient to enforce incompressibility
+- **Splat** — Gaussian splat for mouse interaction
+- **Display** — renders dye channel to screen
 
 ## License
 
-MIT — original PavelDoGreat/WebGL-Fluid-Simulation code used under MIT.
+MIT
