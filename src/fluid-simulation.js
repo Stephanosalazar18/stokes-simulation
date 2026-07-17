@@ -1,3 +1,38 @@
+/**
+ * SIMULADOR DE FLUIDOS BASADO EN EL TEOREMA DE STOKES
+ * ===================================================
+ *
+ * La presente clase orquesta el pipeline de integrales que resuelve la
+ * version 2D de la ecuacion de Navier-Stokes incompresible:
+ *
+ *     ∂v/∂t + (v·∇)v = -∇p/ρ + ν∇²v
+ *
+ * La clave matematica que conecta el codigo con el Teorema de Stokes es
+ * la DESCOMPOSICION DE HELMHOLTZ-HODGE: cualquier campo puede escribirse
+ * como v = v_libre + ∇p, donde v_libre tiene divergencia nula.
+ *
+ * TEOREMA DE STOKES:
+ *     ∮_C v · dr = ∬_S (∇ × v) · dS
+ *
+ * El paso de PROYECCION (v' = v - ∇p) preserva la integral de circulacion
+ * porque ∮_C ∇p · dr = 0 para todo escalar p, luego
+ *     ∮_C v · dr = ∮_C v' · dr
+ * Solo removemos la componente irrotacional; la circulacion (= vorticidad
+ * integrada en 2D) no se altera. Esto valida el pipeline numericamente.
+ *
+ * ETAPAS DE step() (orden matematico):
+ *   1. splat    : inyecta momentum/densidad (input de circulacion)
+ *   2. source   : inyecta viento y densidad en el inlet (Dirichlet)
+ *   3. advection: integra ∂v/∂t + (v·∇)v = 0 (lineas de flujo)
+ *   4. uvAdvect : (solo modo imagen) propaga la deformacion de UV
+ *   5. jacobi   : resuelve ∇²p = ∇·v iterativamente (Poisson)
+ *   6. projection: v' = v - ∇p (Stokes -> preserva circulacion)
+ *
+ * ESTADO HTML:
+ *   windTunnelMode: inyecta viento continuo desde la izquierda
+ *   imageMode: advecta un mapa UV en lugar del color para no difuminar
+ */
+
 import {
     baseVertexShader, advectionFragmentShader, jacobiFragmentShader,
     projectionFragmentShader, splatFragmentShader, displayFragmentShader, sourceFragmentShader,
@@ -6,8 +41,10 @@ import {
 import { compileShader, createProgram, createDoubleFBO } from './webgl-utils.js';
 import { ObstacleManager } from './obstacle-manager.js';
 
+/** Resolucion de la simulacion (texturas fisicas, no de pantalla). */
 export const SIM_WIDTH = 512;
 export const SIM_HEIGHT = 512;
+/** Iteraciones del metodo de Jacobi para la ecuacion de Poisson ∇²p = ∇·v. */
 const JACOBI_ITERATIONS = 20;
 
 export class FluidSimulation {
@@ -166,6 +203,20 @@ export class FluidSimulation {
         this.velocityFBO.swap();
     }
 
+    /**
+     * AVANCE DE LA SIMULACION - Ejecuta un paso completo del pipeline de Stokes.
+     *
+     * Orden matematico del pipeline (cada uno resuelve una parte de la integral):
+     *   1. splat:    inyecta momentum (genera circulacion localmente)
+     *   2. source:   inyecta viento Dirichlet izq (genera flujo de entrada)
+     *   3. advection: integra (v·∇)v backward (semi-Lagrangiano)
+     *   4. uvAdvect: (modo imagen) integra la deformacion del UVMap
+     *   5. jacobi:   resuelve ∇²p = ∇·v (corrector de divergencia)
+     *   6. projection: v' = v - ∇p (preserva ∮_C v·dr - Stokes)
+     *
+     * El resultado de cada paso se guarda en velocityFBO.write y se swapea.
+     * iteration count es JACOBI_ITERATIONS para convergencia del Poisson.
+     */
     step() {
         const gl = this.gl;
 
@@ -242,6 +293,17 @@ export class FluidSimulation {
         this.velocityFBO.swap();
     }
 
+    /**
+     * RENDERIZADO - Dibuja el estado actual segun el modo activo.
+     *
+     * - Modo humo/pintura: muestra la densidad (componente w) en escala de
+     *   grises, masca los obstaculos. Visualiza directamente la vorticidad
+     *   integrada por el flujo (Stokes).
+     *
+     * - Modo imagen: muestrea la textura ORIGINAL usando el UVMap deformado.
+     *   De este modo la vorticidad generada se muestra como remolinos sin
+     *   aplicar ningun suavizado gaussiano extra a la foto.
+     */
     render() {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
