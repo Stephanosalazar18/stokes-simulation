@@ -73,28 +73,29 @@ void main() {
  * sea consistente y conservativa con el flujo libre.
  */
 const obstacleLogic = `
-uniform vec2 uObstaclePos[10];
-uniform float uObstacleSize[10];
-uniform int uObstacleType[10];
-uniform int uObstacleCount;
-uniform float uAspectRatio;
+uniform vec2 uObstaclePos[10];   // Posiciones (x,y) normalizadas de hasta 10 obstaculos
+uniform float uObstacleSize[10];  // Radios/tamanos de cada obstaculo
+uniform int uObstacleType[10];    // 0 = inexistente, 1 = circulo, 2 = cuadrado
+uniform int uObstacleCount;       // Cantidad real de obstaculos activos
+uniform float uAspectRatio;       // canvas.width / canvas.height (corrige el stretch)
 
+// getSolid(uv): devuelve 1.0 si el texel es FLUIDO, 0.0 si es SOLIDO (no-slip)
 float getSolid(vec2 uv) {
-    for (int i = 0; i < 10; i++) {
-        if (i >= uObstacleCount) break;
-        if (uObstacleType[i] == 0) continue;
+    for (int i = 0; i < 10; i++) {            // Maximo 10 obstaculos (limite fijo del shader)
+        if (i >= uObstacleCount) break;       // Detiene si ya recorrio todos
+        if (uObstacleType[i] == 0) continue;   // Salta obstaculos desactivados
         
-        vec2 p = uv; p.x *= uAspectRatio;
-        vec2 c = uObstaclePos[i]; c.x *= uAspectRatio;
+        vec2 p = uv; p.x *= uAspectRatio;              // Corrige X para que el circulo no se aplaste
+        vec2 c = uObstaclePos[i]; c.x *= uAspectRatio; // Centra el obstaculo en el mismo espacio
         
-        if (uObstacleType[i] == 1) { 
-            if (length(p - c) < uObstacleSize[i]) return 0.0; 
-        } else if (uObstacleType[i] == 2) { 
-            vec2 d = abs(p - c);
-            if (max(d.x, d.y) < uObstacleSize[i]) return 0.0;
+        if (uObstacleType[i] == 1) {                            // Tipo 1: CIRCULO
+            if (length(p - c) < uObstacleSize[i]) return 0.0;   // Dentro del circulo => solido
+        } else if (uObstacleType[i] == 2) {                     // Tipo 2: CUADRADO
+            vec2 d = abs(p - c);                                 // Distancia rectangular al centro
+            if (max(d.x, d.y) < uObstacleSize[i]) return 0.0;    // Dentro del cuadrado => solido
         }
     }
-    return 1.0;
+    return 1.0; // Ningun obstaculo lo cubre => es fluido libre
 }
 `;
 
@@ -124,39 +125,44 @@ float getSolid(vec2 uv) {
  */
 export const advectionFragmentShader = `#version 300 es
 precision highp float;
-uniform sampler2D uVelocity;
-uniform vec2 uResolution;
-uniform float uDt;
-uniform float uDecay;
-uniform int uWindTunnel; 
-uniform float uInletSize;
+uniform sampler2D uVelocity;  // Textura de velocidad (RGBA32F: u, v, p, densidad)
+uniform vec2 uResolution;     // Resolucion de la simulacion (SIM_WIDTH, SIM_HEIGHT)
+uniform float uDt;            // Paso de tiempo
+uniform float uDecay;         // Factor de evaporacion del humo (multiplicativo)
+uniform int uWindTunnel;      // 1 = tunel de viento activo, 0 = modo pintura
+uniform float uInletSize;     // Altura vertical del inlet del tunel (fraccion 0..1)
 ${obstacleLogic}
 in vec2 vUv;
 out vec4 fragColor;
 
 void main() {
+    // Si el texel actual es SOLIDO, devolvemos cero (no-slip: v = 0 dentro del obstaculo)
     if (getSolid(vUv) < 0.5) { fragColor = vec4(0.0); return; }
 
-    ivec2 fc = ivec2(gl_FragCoord.xy);
-    vec4 o = texelFetch(uVelocity, fc, 0);
-    vec4 n = texelFetch(uVelocity, fc + ivec2(0, 1), 0);
-    vec4 e = texelFetch(uVelocity, fc + ivec2(1, 0), 0);
-    vec4 s = texelFetch(uVelocity, fc + ivec2(0, -1), 0);
-    vec4 w = texelFetch(uVelocity, fc + ivec2(-1, 0), 0);
+    ivec2 fc = ivec2(gl_FragCoord.xy);              // Coordenadas enteras del texel actual
+    vec4 o = texelFetch(uVelocity, fc, 0);           // Velocidad del centro
+    vec4 n = texelFetch(uVelocity, fc + ivec2(0, 1), 0);  // Vecino norte
+    vec4 e = texelFetch(uVelocity, fc + ivec2(1, 0), 0);  // Vecino este
+    vec4 s = texelFetch(uVelocity, fc + ivec2(0, -1), 0); // Vecino sur
+    vec4 w = texelFetch(uVelocity, fc + ivec2(-1, 0), 0); // Vecino oeste
 
+    // INTEGRACION SEMI-LAGRANGIANA: trazamos backward la trayectoria de la particula
+    // y muestreamos la velocidad que tenia en el origen (donde venia)
     vec4 a = texture(uVelocity, (gl_FragCoord.xy - o.xy * uDt) / uResolution);
     
-    a.xy *= 0.999; 
-    a.w  *= uDecay;  
+    a.xy *= 0.999; // Friccion suave: la velocidad decae lentamente (evita inestabilidad numerica)
+    a.w  *= uDecay;  // Evaporacion del humo: densidad decae segun el slider del user
 
     fragColor = a;
 
+    // Si el tunel esta activo, el inlet deja entrar flujo en lugar de reflejar
     bool isInlet = (uWindTunnel == 1) && (abs(vUv.y - 0.5) < uInletSize);
 
-    if (fc.x == 0 && !isInlet) fragColor = vec4(-e.xy, e.z, 0.0);
-    if (fc.y == 0) fragColor = vec4(-n.xy, n.z, 0.0);
-    if (fc.x == int(uResolution.x) - 1) fragColor = vec4(-w.xy, w.z, 0.0);
-    if (fc.y == int(uResolution.y) - 1) fragColor = vec4(-s.xy, s.z, 0.0);
+    // CONDICIONES DE FRONTERA (no-slip walls): reflejan la velocidad invertida
+    if (fc.x == 0 && !isInlet) fragColor = vec4(-e.xy, e.z, 0.0);              // Borde izquierdo: refleja
+    if (fc.y == 0) fragColor = vec4(-n.xy, n.z, 0.0);                          // Borde inferior
+    if (fc.x == int(uResolution.x) - 1) fragColor = vec4(-w.xy, w.z, 0.0);    // Borde derecho
+    if (fc.y == int(uResolution.y) - 1) fragColor = vec4(-s.xy, s.z, 0.0);    // Borde superior
 }`;
 
 /**
