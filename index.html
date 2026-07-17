@@ -3,29 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teorema de Stokes - Simulador de Fluidos</title>
+  <title>Stokes Theorem - Fluid Sim</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #1a1a1a;
-      font-family: system-ui, -apple-system, sans-serif;
+      width: 100%; height: 100%; overflow: hidden;
+      background-color: #000; color: #fff;
+      font-family: 'Courier New', Courier, monospace;
     }
     #canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: crosshair;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; cursor: crosshair;
+    }
+    
+    .ui-panel {
+      position: absolute; top: 20px; right: 20px; width: 280px;
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      padding: 16px; z-index: 10;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .ui-title { font-size: 14px; font-weight: bold; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
+    .ui-group { display: flex; flex-direction: column; gap: 6px; }
+    .ui-label { font-size: 11px; color: rgba(255,255,255,0.8); display: flex; justify-content: space-between; }
+    
+    .btn {
+      background: #000; color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      padding: 8px; font-family: inherit; font-size: 11px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn:hover, .btn.active { background: #fff; color: #000; }
+    .btn-row { display: flex; gap: 8px; }
+    .btn-row .btn { flex: 1; justify-content: center; text-align: center;}
+    
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type=range]:focus { outline: none; }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; background: rgba(255, 255, 255, 0.6); }
+    input[type=range]::-webkit-slider-thumb {
+      height: 12px; width: 12px; border-radius: 0; background: #ffffff; cursor: pointer; -webkit-appearance: none; margin-top: -5px;
     }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
+
+  <div class="ui-panel">
+    <div class="ui-title">SIM. CONFIG // STOKES</div>
+    
+    <div class="ui-group">
+      <div class="ui-label"><span>MODO DE FLUJO</span></div>
+      <div class="btn-row">
+        <button id="btn-tunnel" class="btn active">TÚNEL</button>
+        <button id="btn-paint" class="btn">PINTURA</button>
+        <button id="btn-image" class="btn">IMAGEN</button>
+      </div>
+    </div>
+
+    <div id="group-tunnel-controls" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="ui-group">
+          <div class="ui-label"><span>VELOCIDAD VIENTO</span><span id="val-wind">5.0</span></div>
+          <input type="range" id="sld-wind" min="1.0" max="15.0" step="0.1" value="5.0">
+        </div>
+        <div class="ui-group">
+          <div class="ui-label"><span>TAMAÑO TÚNEL</span><span id="val-inlet-size">0.050</span></div>
+          <input type="range" id="sld-inlet-size" min="0.010" max="0.250" step="0.005" value="0.050">
+        </div>
+    </div>
+
+    <div class="ui-group">
+      <div class="ui-label"><span>VIDA DEL HUMO</span><span id="val-decay">0.999</span></div>
+      <input type="range" id="sld-decay" min="0.950" max="1.000" step="0.001" value="0.999">
+    </div>
+
+    <div class="ui-group">
+      <div class="ui-label"><span>FUERZA CURSOR</span><span id="val-force">400</span></div>
+      <input type="range" id="sld-force" min="50" max="1500" step="50" value="400">
+    </div>
+
+    <div class="ui-group">
+      <div class="ui-label"><span>RADIO CURSOR</span><span id="val-radius">0.0015</span></div>
+      <input type="range" id="sld-radius" min="0.0005" max="0.005" step="0.0001" value="0.0015">
+    </div>
+
+    <div class="ui-title" style="margin-top: 8px;">OBSTÁCULOS & CARGA</div>
+    
+    <div class="btn-row" style="margin-bottom: 8px;">
+      <button id="btn-add-circle" class="btn">+ CÍRCULO</button>
+      <button id="btn-add-square" class="btn">+ CUADRADO</button>
+    </div>
+
+    <!-- Input file invisible pero funcional -->
+    <input type="file" id="file-upload" accept="image/*" style="display: none;">
+    <button id="btn-upload" class="btn" style="width: 100%; border-color: #aaffaa; color: #aaffaa; margin-bottom: 8px;">SUBIR FOTO / IMAGEN</button>
+
+    <div class="btn-row">
+      <button id="btn-clear-fluid" class="btn" style="border-color: rgba(100,200,255,0.6); color: #66ccff;">REINICIAR FLUJO</button>
+      <button id="btn-clear-obs" class="btn" style="border-color: rgba(255,100,100,0.6); color: #ff6666;">BORRAR FIGURAS</button>
+    </div>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
